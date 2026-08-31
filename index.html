@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Касания на расстоянии 💝</title>
+    <!-- Подключаем Firebase (базу данных реального времени) -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+    <style>
+        body {
+            margin: 0; padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #ffecf1, #fff9fb);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            color: #333; box-sizing: border-box; overflow: hidden;
+        }
+        .widget-card {
+            background: white; border-radius: 30px; padding: 35px 25px;
+            box-shadow: 0 15px 35px rgba(255, 105, 180, 0.2);
+            text-align: center; max-width: 350px; width: 100%;
+            border: 3px solid #ffb6c1; position: relative;
+        }
+        h2 { color: #ff4081; margin: 0 0 10px 0; font-size: 22px; }
+        .subtitle { color: #888; font-size: 14px; margin-bottom: 25px; }
+        .touch-btn {
+            width: 160px; height: 160px; border-radius: 50%; border: none;
+            background: linear-gradient(135deg, #ff4081, #ff6699);
+            color: white; font-size: 70px; cursor: pointer;
+            box-shadow: 0 10px 25px rgba(255, 64, 129, 0.4);
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-flex; align-items: center; justify-content: center;
+            user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+        .touch-btn:active { transform: scale(0.92); box-shadow: 0 5px 15px rgba(255, 64, 129, 0.3); }
+        .pulse { animation: buttonPulse 0.5s linear; }
+        @keyframes buttonPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); filter: brightness(1.2); }
+            100% { transform: scale(1); }
+        }
+        .counter-container {
+            margin-top: 30px; display: flex; justify-content: space-around;
+            background: #fff5f7; padding: 15px; border-radius: 20px; border: 1px dashed #ffb6c1;
+        }
+        .counter-block { flex: 1; }
+        .counter-val { font-size: 28px; font-weight: bold; color: #ff4081; margin-bottom: 5px; }
+        .counter-lbl { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        .divider { width: 1px; background: #ffb6c1; margin: 0 10px; }
+    </style>
+</head>
+<body>
+    <div class="widget-card">
+        <h2>Думаю о тебе 🧸</h2>
+        <div class="subtitle">Нажми на кнопку, чтобы отправить касание через километры</div>
+        
+        <button class="touch-btn" id="main-btn">❤️</button>
+        
+        <div class="counter-container">
+            <div class="counter-block">
+                <div class="counter-val" id="vova-count">0</div>
+                <div class="counter-lbl">От Вовы</div>
+            </div>
+            <div class="divider"></div>
+            <div class="counter-block">
+                <div class="counter-val" id="anya-count">0</div>
+                <div class="counter-lbl">От Ани</div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
