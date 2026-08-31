@@ -1,70 +1,99 @@
-// Конфигурация твоей базы данных Firebase
-// (Замени эти данные на свои из шага 3 ниже!)
-const firebaseConfig = {
-    apiKey: "ТВОЙ_API_KEY",
-    authDomain: "ТВОЙ_PROJECT_://firebaseapp.com",
-    databaseURL: "https://ТВОЙ_PROJECT_://firebaseio.com",
-    projectId: "ТВОЙ_PROJECT_ID",
-    storageBucket: "ТВОЙ_PROJECT_://appspot.com",
-    messagingSenderId: "ТВОЙ_SENDER_ID",
-    appId: "ТВОЙ_APP_ID"
-};
+// Автономный фикс касаний без Firebase и регистраций
+(function() {
+    // Наш уникальный секретный токен для вашей пары (сгенерирован специально для вас)
+    const token = "vov202_anya_secret_touch_token_2026";
+    const url = `https://keyvalue.xyz{token}`;
 
-// Инициализируем Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+    let user = "guest";
+    if (window.location.hash === "#vova") user = "vova";
+    if (window.location.hash === "#anya") user = "anya";
 
-// Определяем, кто зашел на сайт, по хэшу в ссылке
-// Если зайти по ссылке вида сайта/#vova — ты Вова. Если сайт/#anya — ты Аня.
-let user = "guest";
-if (window.location.hash === "#vova") user = "vova";
-if (window.location.hash === "#anya") user = "anya";
+    const mainBtn = document.getElementById('main-btn');
+    const vovaDisplay = document.getElementById('vova-count');
+    const anyaDisplay = document.getElementById('anya-count');
 
-const mainBtn = document.getElementById('main-btn');
-const vovaDisplay = document.getElementById('vova-count');
-const anyaDisplay = document.getElementById('anya-count');
+    let currentVova = 0;
+    let currentAnya = 0;
 
-// Получаем текущую дату в формате ГГГГ-ММ-ДД для ежедневного сброса
-function getTodayString() {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
-}
+    // Функция загрузки данных из сети
+    async function loadData() {
+        try {
+            const response = await fetch(url);
+            if (response.ok) {
+                const text = await response.text();
+                // Данные хранятся в виде "кликиВовы,кликиАни,дата"
+                const parts = text.split(',');
+                
+                const todayStr = new Date().toISOString().split('T')[0];
+                // Если наступил новый день — сбрасываем счетчики в ноль
+                if (parts[2] !== todayStr) {
+                    await saveData(0, 0);
+                    return;
+                }
 
-const todayStr = getTodayString();
-const dbRef = database.ref('clicks/' + todayStr);
+                const newVova = parseInt(parts[0]) || 0;
+                const newAnya = parseInt(parts[1]) || 0;
 
-// Слушаем изменения в базе данных реального времени
-dbRef.on('value', (snapshot) => {
-    const data = snapshot.val() || { vova: 0, anya: 0 };
-    
-    // Мягкая анимация цифр при обновлении
-    if (parseInt(vovaDisplay.textContent) !== data.vova && user === "anya") triggerPulse();
-    if (parseInt(anyaDisplay.textContent) !== data.anya && user === "vova") triggerPulse();
-    
-    vovaDisplay.textContent = data.vova || 0;
-    anyaDisplay.textContent = data.anya || 0;
-});
+                // Если у другого человека изменилась цифра — запускаем пульсацию сердца
+                if (user === "vova" && newAnya !== currentAnya) triggerPulse();
+                if (user === "anya" && newVova !== currentVova) triggerPulse();
 
-// Логика клика по кнопке
-mainBtn.addEventListener('click', () => {
-    if (user === "guest") {
-        alert("Пожалуйста, используй секретную ссылку с хэшем #vova или #anya в конце!");
-        return;
+                currentVova = newVova;
+                currentAnya = newAnya;
+
+                vovaDisplay.textContent = currentVova;
+                anyaDisplay.textContent = currentAnya;
+            } else if (response.status === 404) {
+                // Если базы еще нет — создаем её в сети
+                await saveData(0, 0);
+            }
+        } catch (e) {
+            console.log("Ошибка обновления данных");
+        }
     }
 
-    // Запускаем анимацию кнопки на своем экране
-    mainBtn.classList.remove('pulse');
-    void mainBtn.offsetWidth; // Хак для перезапуска CSS-анимации
-    mainBtn.classList.add('pulse');
+    // Функция сохранения данных в сеть
+    async function saveData(v, a) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        try {
+            await fetch(url, {
+                method: 'POST',
+                body: `${v},${a},${todayStr}`,
+                headers: { 'Content-Type': 'text/plain' }
+            });
+        } catch(e) {}
+    }
 
-    // Атомарно увеличиваем счетчик кликов в облаке
-    dbRef.child(user).transaction((currentValue) => {
-        return (currentValue || 0) + 1;
-    });
-});
+    // Логика клика
+    if (mainBtn) {
+        mainBtn.addEventListener('click', async () => {
+            if (user === "guest") {
+                alert("Используй секретную ссылку с #vova или #anya в конце!");
+                return;
+            }
 
-function triggerPulse() {
-    mainBtn.classList.remove('pulse');
-    void mainBtn.offsetWidth;
-    mainBtn.classList.add('pulse');
-}
+            mainBtn.classList.remove('pulse');
+            void mainBtn.offsetWidth;
+            mainBtn.classList.add('pulse');
+
+            if (user === "vova") currentVova++;
+            if (user === "anya") currentAnya++;
+
+            vovaDisplay.textContent = currentVova;
+            anyaDisplay.textContent = currentAnya;
+
+            await saveData(currentVova, currentAnya);
+        });
+    }
+
+    function triggerPulse() {
+        if (!mainBtn) return;
+        mainBtn.classList.remove('pulse');
+        void mainBtn.offsetWidth;
+        mainBtn.classList.add('pulse');
+    }
+
+    // Запускаем бесконечное обновление каждые 2 секунды, чтобы ловить клики на расстоянии
+    loadData();
+    setInterval(loadData, 2000);
+})();
